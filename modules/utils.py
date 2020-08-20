@@ -143,8 +143,10 @@ class ModelWrapper(object):
 
         # MirroredStrategy镜像策略主要用在单机多卡的训练上，采用的是All-reduces算法实现
         self.mirrored_strategy = tf.contrib.distribute.MirroredStrategy(num_gpus=self.num_gpus)
+        # 分布式运行配置文件
         self.config = tf.estimator.RunConfig(train_distribute=self.mirrored_strategy,
                                              eval_distribute=self.mirrored_strategy)
+        # Estimator 封装了训练，预测，评估
         self.model = tf.estimator.Estimator(model_fn=get_model,
                                             model_dir=self.checkpoint_dir,
                                             config=self.config,
@@ -157,6 +159,7 @@ class ModelWrapper(object):
             self.best_metric = 0
         self.best_epoch = 0
 
+    # 保存模型
     def save(self):
         path = Path('./models/best_model')
         if not path.exists():
@@ -166,6 +169,7 @@ class ModelWrapper(object):
             shutil.rmtree(self.best_model_dir)
         shutil.copytree(self.checkpoint_dir, self.best_model_dir)
 
+    # 训练模块
     def train(self, train_input_fn, eval_input_fn=None, n_epochs=10,
               steps_per_epoch=None, early_stopping=None, hooks=None):
         print('\nTraining %s ...' % self.model_stamp)
